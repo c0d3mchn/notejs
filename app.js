@@ -8,6 +8,10 @@ const session = require('express-session');
 
 const app = express();
 
+// Load routes
+const notes = require('./routes/notes');
+const users = require('./routes/users');
+
 // MongoDB Init
 mongoose.connect('mongodb://localhost/notejs', {
     useNewUrlParser: true,
@@ -15,10 +19,6 @@ mongoose.connect('mongodb://localhost/notejs', {
 })
     .then(() => console.log('>>> MongoDB connected >>>'))
     .catch(err => console.log(err));
-
-// Load Schema Model
-require('./models/Note');
-const Note = mongoose.model('notes');
 
 // Handlebars Middleware
 app.engine('handlebars', exphbs());
@@ -64,92 +64,12 @@ app.get('/about', (req, res) => {
     res.render('about');
 })
 
-app.get('/notes', (req, res) => {
-    Note.find({})
-        .sort({ date: 'desc' })
-        .then(notes => {
-            res.render('notes/index', {
-                notes: notes
-            })
-        })
-})
-
-app.get('/notes/add', (req, res) => {
-    res.render('notes/add');
-})
-
-app.get('/notes/edit/:id', (req, res) => {
-    Note.findOne({
-        _id: req.params.id
-    })
-        .then(note => {
-            res.render('notes/edit', {
-                note: note
-            });
-        })
-})
-
-app.post('/notes', (req, res) => {
-    let errors = [];
-
-    if (!req.body.title) {
-        errors.push({ text: 'Please add a title' });
-    }
-    if (!req.body.details) {
-        errors.push({ text: 'Please add details' });
-    }
-
-    if (errors.length > 0) {
-        res.render('notes/add', {
-            errors: errors,
-            title: req.body.title,
-            details: req.body.details
-        })
-    } else {
-        const newUser = {
-            title: req.body.title,
-            details: req.body.details
-        }
-        new Note(newUser)
-            .save()
-            .then(note => {
-                req.flash('success_msg', 'Note added');
-                res.redirect('/notes');
-            })
-    }
-})
-
-// Edit form process
-app.put('/notes/:id', (req, res) => {
-    Note.findOne({
-        _id: req.params.id
-    })
-        .then(note => {
-            // New values
-            note.title = req.body.title;
-            note.details = req.body.details;
-
-            note.save()
-                .then(note => {
-                    req.flash('success_msg', 'Note edited');
-                    res.redirect('/notes');
-                });
-        });
-});
-
-// Delete note
-
-app.delete('/notes/:id', (req, res) => {
-    Note.deleteOne({ _id: req.params.id })
-        .then(() => {
-            req.flash('error_msg', 'Note removed');
-            res.redirect('/notes');
-        });
-});
-
 /**********************
  *****SERVER START*****
  **********************/
+
+app.use('/notes', notes);
+app.use('/users', users);
 
 const port = 5000;
 
