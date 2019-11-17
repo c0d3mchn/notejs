@@ -17,8 +17,8 @@ mongoose.connect('mongodb://localhost/notejs', {
     .catch(err => console.log(err));
 
 // Load Schema Model
-require('./models/Idea');
-const Idea = mongoose.model('ideas');
+require('./models/Note');
+const Note = mongoose.model('notes');
 
 // Handlebars Middleware
 app.engine('handlebars', exphbs());
@@ -65,11 +65,11 @@ app.get('/about', (req, res) => {
 })
 
 app.get('/notes', (req, res) => {
-    Idea.find({})
+    Note.find({})
         .sort({ date: 'desc' })
-        .then(ideas => {
+        .then(notes => {
             res.render('notes/index', {
-                ideas: ideas
+                notes: notes
             })
         })
 })
@@ -79,12 +79,12 @@ app.get('/notes/add', (req, res) => {
 })
 
 app.get('/notes/edit/:id', (req, res) => {
-    Idea.findOne({
+    Note.findOne({
         _id: req.params.id
     })
-        .then(idea => {
+        .then(note => {
             res.render('notes/edit', {
-                idea: idea
+                note: note
             });
         })
 })
@@ -110,9 +110,9 @@ app.post('/notes', (req, res) => {
             title: req.body.title,
             details: req.body.details
         }
-        new Idea(newUser)
+        new Note(newUser)
             .save()
-            .then(idea => {
+            .then(note => {
                 req.flash('success_msg', 'Note added');
                 res.redirect('/notes');
             })
@@ -121,26 +121,26 @@ app.post('/notes', (req, res) => {
 
 // Edit form process
 app.put('/notes/:id', (req, res) => {
-    Idea.findOne({
+    Note.findOne({
         _id: req.params.id
     })
-        .then(idea => {
+        .then(note => {
             // New values
-            idea.title = req.body.title;
-            idea.details = req.body.details;
+            note.title = req.body.title;
+            note.details = req.body.details;
 
-            idea.save()
-                .then(idea => {
+            note.save()
+                .then(note => {
                     req.flash('success_msg', 'Note edited');
                     res.redirect('/notes');
                 });
         });
 });
 
-// Delete idea
+// Delete note
 
 app.delete('/notes/:id', (req, res) => {
-    Idea.remove({ _id: req.params.id })
+    Note.deleteOne({ _id: req.params.id })
         .then(() => {
             req.flash('error_msg', 'Note removed');
             res.redirect('/notes');
