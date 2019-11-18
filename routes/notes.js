@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const {ensureAuthenticated} = require('../helpers/auth');
+const { ensureAuthenticated } = require('../helpers/auth');
 
 // Load Schema Model
 require('../models/Note');
@@ -9,7 +9,7 @@ const Note = mongoose.model('notes');
 
 // Index page
 router.get('/', ensureAuthenticated, (req, res) => {
-    Note.find({})
+    Note.find({ user: req.user.id })
         .sort({ date: 'desc' })
         .then(notes => {
             res.render('notes/index', {
@@ -27,9 +27,15 @@ router.get('/edit/:id', ensureAuthenticated, (req, res) => {
         _id: req.params.id
     })
         .then(note => {
-            res.render('notes/edit', {
-                note: note
-            });
+            if (note.user != req.user.id) {
+                req.flash('error_msg', 'Not authorized');
+                res.redirect('/notes');
+            } else {
+                res.render('notes/edit', {
+                    note: note
+                });
+            }
+
         })
 })
 
@@ -52,7 +58,8 @@ router.post('/', ensureAuthenticated, (req, res) => {
     } else {
         const newUser = {
             title: req.body.title,
-            details: req.body.details
+            details: req.body.details,
+            user: req.user.id
         }
         new Note(newUser)
             .save()
