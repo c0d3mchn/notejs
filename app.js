@@ -21,7 +21,7 @@ require('./config/passport')(passport);
 const db = require('./config/database');
 
 // MongoDB Init
-mongoose.connect(db.mongoURI, {
+mongoose.connect('mongodb+srv://c0d3mchn:%2Ad3v%211D%2A@cluster0-bfftn.mongodb.net/test?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
